@@ -1,0 +1,1754 @@
+program StickFighter;
+{$DEFINE SMART8}
+{$i srl/srl.simba}
+{$I SRL/SRL/Misc/Debug.Simba}
+{$i ObjectDTM\ObjDTMInclude.simba}
+
+{*******************************************************************************
+
+     *StickFighter - AIO Fighter*
+
+     *Verson: 1.0*
+
+     *Script Writer: StickToTheScript*
+
+     *This is a fighting script that fights and kills monsters. You can use the*
+     *pre-loaded monsters, or you can make your own with this tool:*
+     *http://villavu.com/forum/showthread.php?t=26944&highlight=AutoColorAid*
+
+
+  ***** Make Sure SMART 8 is installed!*****
+  ***** Download it here: https://github.com/BenLand100/SMART*****
+  **If SMART8 is not installed, just remove the '8' in the define smart section above**
+
+     Instructions:
+     1. Stand at the monster you wish to begin killing or in the area you are picking up bones.
+     2. Fill out the SetUp.
+     3. Press the little green arrow and let it Run!
+
+     *Remember to check it after a while to make sure everything is ok.*
+
+     **Recommended that you choose a less populated world so that the killing is
+        faster and better!
+
+    **Recommended that you make the first XP bar to the total level or combat style**
+    **of your choice. So it can keep track of your XP!**
+
+
+
+      ***Please Report Bugs/Errors/Anything on the Thread***
+
+      **Please remember to include if you are using SMART 7 or 8 when you post on the thread**
+      **It would be very useful to know**
+
+      *To Do List:*
+      *- LET ME KNOW!*
+
+
+      *Thanks for Trying the script!*
+
+      **Special Thanks to The Mayor and Sjoe for their insight and contributions! XD**
+
+
+
+
+*******************************************************************************}
+
+var
+  Sword, MageHat, Bow, TimeGone,
+  KillXP, Coin, Bone, BeginXP,
+  Kills, XPGain, XPPerhour,
+  KillsPerHour, ScriptRunTime,
+  TotalRunTime, NormTime,
+  NormalWaitTime : Integer;
+
+  {*******************************************************************************}
+
+
+
+Const
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP///
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //SRL Stats
+  SRLStats_Username = '';   //Fill This out if you want.
+  SRLStats_Password = '';   //Fill This out if you want.
+
+
+  //Player
+  PlayerUser = 'Username'; //Username/Email
+  PlayerPass = 'password'; //Password
+
+
+  //Run Length
+  RunTime = 60;  //How long to run the script for.
+
+
+  //Skill Setup
+  Skill2Train = 'Strength';   //Skill you wish to train. MlControlled, Attack,
+                              //Strength, MlDefence, MGControlled, Magic, MGDefence,
+                              //RControlled, Ranged, RDefence
+                              //Ml = Melee, MG = Magic, R = Ranged
+
+  PrayerOnlyMode = False;     //Just picks up and buries bones that are found.
+
+
+  XPBarNumber = 1;    //Your XP Bar Counter Number. Can only be 1, 2, or 3.
+                      //Set it to the Skill you want the Proggy to track.
+                      //1 is preset to your Total Level. If you want to use that, you can.
+
+
+  //Monster Setup
+  Monster2Kill = 'giantspider';  //Can be Guard (Var.), HillGiant, Goblin, Minotaur,
+                                //Ankou, GiantSpider, MossGiant, HillGiant, IceGiant
+                                //LesserDemon, WarpedCockroach, CorpseSpider, WarpedFly
+                                //CrawlingCorpseTorso, WarpedRat, WarpedBat, CorpseArcher                                                                                                       //
+                                //skeleton (Lumb. Catacombs), Skoblin, CorpseMage,
+                                //DragithNurn, Or Custom (Setup Below).
+
+
+  //Custom Monster: Fill out if Monster2Kill is Custom. Please use ACA for better
+  //Accuracy and easier kills. XD
+  MColour  = 0; //Colour of the Monster
+  MTol    = 0; //Tolerance Of the Monster
+  HMod    = 0; //HueMod of the Monster
+  SMod    = 0; //SatMod of the Monster
+  UpText1 = 'Monster Uptext Here';  //Monster Name
+  UpText2 = 'Monster Uptext Here';  //Uptext of moneter *Different from Uptext1*
+
+
+  //Loot   WARNING: KILLING IS FASTER WHEN TAKECOINS AND BURYBONES = FALSE!
+  TakeCoins = False;   //Take loot? True = Yes, False = No
+  BuryBones = False;   //If true, will bury them.
+
+
+  //AntiBans
+  UseAntibans = True;  //If true, will use antibans. Takes a bit longer, but still works.
+
+
+  //Home Teleport
+  UseTele = True; //Teleports you to Lumb. If near death.
+
+
+
+  //Food Setup
+  UseFood      =   True;     //Use Food?
+  NameFood     =   'Lobster';   //Food Name
+  FoodNumber   =   '9';      //Number on your Ability bar set to food.
+
+
+  //Abilities Setup
+  UseMomentum =     True; //Set false if you dont want to use Momentum
+  Momentum =        '0';  //Number on your Ability bar for Momentum. Don't set as "-" or "=".
+
+
+  UseNormal =       True; //Use normal attacks on your ability bar.
+  Normal =          '1';  //Number on your Ability bar for Normal Attack. Don't set as "-" or "=".
+  NormWaitTime =     15;   //Wait Time till able to use ability again in seconds.
+
+
+  UseThreshold1 =   True; // Set false if you dont want to use threshold1
+  Threshold1 =      '4';  //Number on your Ability bar for Threshold. Don't set as "-" or "=".
+  Thresh1WaitTime =   30;   //Wait Time till able to use ability again in seconds.
+
+
+  UseThreshold2 =    True;// Set false if you dont want to use threshold2
+  Threshold2 =      '6';  //Number on your Ability bar for Threshold. Don't set as "-" or "=".
+  Thresh2WaitTime =   20;   //Wait Time till able to use ability again in seconds.
+
+
+  UseUltimate =     True; // Set false if you dont want to use Ultimate Attacks
+  Ultimate =        '5';  //Number on your Ability bar for Ultimate Attack. Don't set as "-" or "=".
+  UltWaitTime =      30;   //Wait Time till able to use ability again in seconds.
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP//SETUP///
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+{******************************************************************************}
+
+{  DO NOT TOUCH ANYTHING BEYOND THIS POINT UNLESS YOU KNOW WHAT YOU ARE DOING! }
+
+{******************************************************************************}
+
+procedure DeclarePlayers;
+begin
+  HowManyPlayers := 1;
+  NumberOfPlayers(HowManyPlayers);
+  CurrentPlayer := 0;
+
+  Players[0].Name :=  PlayerUser;
+  Players[0].Pass :=  PlayerPass;
+  Players[0].Active := True;
+end;
+
+{******************************************************************************}
+
+function IsSetup: Boolean;
+var
+  n, q: String;
+begin
+  if (Monster2Kill = '') then
+  begin
+    WriteLn('Please enter a monster name.');
+    TerminateScript;
+  end;
+
+  n := Lowercase(Monster2Kill);
+  if ((n <> 'guard') and (n <> 'warpedcockroach') and (n <> 'corpsespider')
+  and (n <> 'lesserdemon') and (n <> 'icegiant') and (n <> 'goblin') and (n <> 'hillgiant')
+  and (n <> 'mossgiant') and (n <> 'giantspider') and (n <> 'ankou') and (n <> 'minotaur')
+  and (n <> 'warpedfly') and (n <> 'crawlingcorpsetorso ') and (n <> 'warpedrat')
+  and (n <> 'skeleton') and (n <> 'warpedbat') and (n <> 'corpsarcher') and (n <> 'skoblin')
+  and (n <> 'corpsemage') and (n <> 'dragithnurn') and (n <> 'custom')) then
+  begin
+    WriteLn('Please enter a valid monster type that I can kill for you.');
+    TerminateScript;
+  end;
+
+  q := Lowercase(Skill2Train);
+  if ((q <> 'attack') and (q <> 'strength') and (q <> 'mlcontrolled') and (q <> 'mldefence') and (q <> 'mgcontrolled')
+  and (q <> 'magic') and (q <> 'mgdefence') and (q <> 'rcontrolled') and (q <> 'ranged') and (q <> 'rdefence')) then
+  begin
+    WriteLn('Please enter a valid skill type.');
+    TerminateScript;
+  end;
+
+  if (NameFood = '') then
+  begin
+    Writeln('Please enter a food type.');
+    TerminateScript;
+  end;
+
+  if (FoodNumber = '') then
+  begin
+    Writeln('Please enter a food number for your ability bar.');
+    TerminateScript;
+  end;
+
+  if (UseMomentum = True) then
+  begin
+    if (Momentum = '') then
+    begin
+      Writeln('Please enter a momentum number for your ability bar.');
+      TerminateScript;
+    end;
+  end;
+
+  if (UseNormal = True) then
+  begin
+    if (Normal = '') then
+    begin
+      Writeln('Please enter a normal number for your ability bar.');
+      TerminateScript;
+    end;
+  end;
+
+  if (UseThreshold1 = True) then
+  begin
+    if (Threshold1 = '') then
+    begin
+      Writeln('Please enter a Threshold1 number for your ability bar.');
+      TerminateScript;
+    end;
+  end;
+
+  if (UseThreshold2 = True) then
+  begin
+    if (Threshold2 = '') then
+    begin
+      Writeln('Please enter a Threshold2 number for your ability bar.');
+      TerminateScript;
+    end;
+  end;
+
+  if (UseUltimate = True) then
+  begin
+    if (Ultimate = '') then
+    begin
+      Writeln('Please enter a Ultimate number for your ability bar.');
+      TerminateScript;
+    end;
+  end;
+
+  Result := True;
+end;
+
+{******************************************************************************}
+
+procedure LoadBitmaps;
+begin
+
+  Sword := BitmapFromString(6, 8, 'meJwTV7O0sLDOzMkJi4pqbKxNSopN' +
+        '7Fju4uwQbmcUHOgfGhUVm5EfuvJK07GndbsPrLt5bcGBh4kdy8T1/' +
+        'MJWXi1//HTigxfaDWvMMpvZtXzF9XyBgmL1W/gz1/nGZAO1RC/aK+' +
+        '1fKla/Waj8fHJZW8vmpxWPnwFFgIq1y86YB6SwC6nKxHWYZjZLSqo' +
+        'BxWXiOgH5tz3R');
+
+  MageHat := BitmapFromString(14, 22, 'meJxdkk1LG1EUhlH8wASlmgQzY0' +
+        'xVyiRYEuzYpEksGYR2FUVrJFGRQnEhpUJJ0SQ1Giqi4kLQVZdd+LG' +
+        'oi24LLhSz8E+4Uxf+C5/M0csgvFzOnPOce99z556Ws7VFcybs+xjy' +
+        'o7lYoBD3/4j71Yokf/ozW/ukIfKjekfU/wKp4FVIixl6Lm0CXy6ae' +
+        'x/6UG1KO8kP/V5Jsu7nIgdPIoZsbGggv5R8vZQcZK1YoTUrVMwM0A' +
+        'hAXLAPam9qReKQVVzhh5iqCANUg10uRLuKlUn42bBvxpaUEINjFQ8' +
+        'iGvGAnAztwc42GUeqFdsYSZe7DsjloDrZ5WIWRpMMJZJxQ2e6UmaA' +
+        'VdkW0im56u8T76QLBpIr5aDx+W/5tKlmJxBXMGv2pUkLKt3c5Y/v2' +
+        'xPbmmZwvdwbSfjCUyMkfgbff9nYWK+eXcxdXfdk/nk9voDeQ8vb4T' +
+        'eJxEjiZc7oz6JIcjkS3aGEwue35mSlublf705J1bS2TWsLJhj8RQt' +
+        'iB2Monfrzvzs6DgkjeZhSeZVVPhEbxsamIVuaUpyuyIXSzkr10Emy' +
+        'Z+zr5ujmX2YRUmDIYvVIkSSZBQU+70LWndik+Fwo1q0q0ixPiUlIn' +
+        'MhElNLWNCIgww69Hs/jM+hs87pdXvdjrN6GemD8JglETgDeWZKHCi' +
+        '96VlLiz4I9AGMdyV8=');
+
+  Bow := BitmapFromString(6, 5, 'meJyTyNdyXJ9hMTWNR4ODT1VDVTHI' +
+        'fU2bYZ0dr5YoCwsPK7MlJxeXYa0dr4MwCyuIyyPKqWAvBCS5pdTZW' +
+        'EBcoMrCnfmsrAoc/L5ALtAQw/JA5xtGAAJHD+4=');
+
+end;
+
+{******************************************************************************}
+
+procedure FreeBitmaps;
+begin
+  FreeBitmap(Sword);
+  FreeBitmap(MageHat);
+  FreeBitmap(Bow);
+end;
+
+{******************************************************************************}
+
+function IsInFight: Boolean;
+Var
+  x, y: Integer;
+Begin
+
+  GameTab(tab_Combat);
+
+  Result := FindColorTolerance(x, y, 1671768, 594, 226, 687, 247, 0);
+
+End;
+
+{******************************************************************************}
+
+procedure MomentumAttack;
+var
+  x, y : Integer;
+
+begin
+  if (UseMomentum = True) then
+  begin
+    if (not GameTab(tab_Combat)) then
+    begin
+      GameTab(tab_Combat);
+      wait(990 + Random(789));
+    end;
+
+    if FindColorTolerance(x, y, 83, 548, 357, 582, 388, 15) then
+      exit;
+
+    if (not FindColorTolerance(x, y, 83, 548, 357, 582, 388, 15)) then
+      begin
+        Sendkeys(Momentum,randomrange(5,15),randomrange(5,15));
+        wait(RandomRange(340, 568));
+        exit;
+      end;
+  end;
+end;
+
+{******************************************************************************}
+
+procedure NormalAttack;
+var
+  Slots : TIntegerArray;
+  i : integer;
+begin
+  if (UseNormal = True) then
+  begin
+    if (TimeFromMark(NormTime) < NormalWaitTime) then
+      Exit;
+
+    Slots := [NormWaitTime];
+    for i := 0 to High(Slots) do
+    begin
+      writeLn('Doing Normal Attack');
+      Sendkeys(Normal,randomrange(5,15),randomrange(5,15));
+      wait(RandomRange(340, 568));
+      MarkTime(NormTime);
+      NormalWaitTime := RandomRange(2500,3000);
+      exit;
+    end;
+  end;
+end;
+
+{******************************************************************************}
+
+procedure ThresholdAttack;
+var
+  x, y : Integer;
+
+ begin
+  case random(75) of
+    0..24:
+      begin
+        if (UseThreshold1 = True) then
+        begin
+          if FindColorTolerance(x, y, 7326956, 269, 275, 291, 288, 15) then
+          begin
+            writeLn('Doing Threshold Attack');
+            Sendkeys(Threshold1,randomrange(5,15),randomrange(5,15));
+            wait(RandomRange(340, 568));
+            exit;
+          end;
+        end;
+      end;
+
+    25..50:
+      begin
+        if (UseThreshold2 = True) then
+        begin
+          if FindColorTolerance(x, y, 7326956, 269, 279, 291, 283, 15) then
+          begin
+            writeLn('Doing Threshold Attack');
+            Sendkeys(Threshold2,randomrange(5,15),randomrange(5,15));
+            wait(RandomRange(340, 568));
+            exit;
+          end;
+        end;
+      end;
+    end;
+  end;
+
+{******************************************************************************}
+
+procedure UltimateAttack;
+var
+  x, y : Integer;
+
+begin
+  if (UseUltimate = True) then
+  begin
+    if FindColorTolerance(x, y, 7267570, 457, 279, 461, 283, 15) then
+    begin
+      writeLn('Doing Ultimate Attack');
+      Sendkeys(Ultimate,randomrange(5,15),randomrange(5,15));
+      wait(RandomRange(340, 568));
+      exit;
+    end else
+    exit;
+  end;
+end;
+
+{******************************************************************************}
+
+procedure UseAbilities;
+begin
+  NormalAttack;
+
+  case Random(2) of
+  0:
+  ThresholdAttack;
+
+  1:
+  UltimateAttack;
+
+  end;
+end;
+
+{******************************************************************************}
+
+function BuryBonesInv : boolean;
+var
+  x, y, i: Integer;
+   BuryBone: TIntegerArray;
+
+begin
+  FindNormalRandoms;
+
+   GameTab(tab_Inv);
+    wait(990 + Random(789));
+
+
+      BuryBone[0] := DTMFromString('mbQAAAHicY2VgYHjKxMDwAIjfA/ETIL4BxMaMDAy2QGwJxHpAbAjEx/buBapmQsOYgBELBgMAmGoH2g==');
+
+      BuryBone[1] := DTMFromString('mggAAAHicY2NgYJjHysCwAohnAvFEIJ4LxEuAuJKRgaEOiJuAuAyIC4G4GIg3rloJ1MWEgYFasGJGHBgCAGdzCOE=');
+
+      BuryBone[2] := DTMFromString('mbQAAAHicY2VgYNjDxMBwGIjXA/FRIN4KxCaMDAy2QGwGxEZArAPEs6dMAapmQsGsQBIdM2LBYAAAMA4Gqw==');
+
+      BuryBone[3] := DTMFromString('mggAAAHicY2NgYEhnYmCIBOJCIC4C4jgmiFg4IwNDDBCnAHEwEAdA8aLZs4C6mDAwK5DEhhlxYAgAAHRNBpA=');
+
+for i := 0 to High(BuryBone) do
+ begin
+  if FindDTM(BuryBone[i], x, y, MIX1, MIY1, MIX2, MIY2) then
+  begin
+    repeat
+      writeln('Found Bones DTM. Now Burying...');
+      Mouse(x, y, 4, 4, True);
+      Wait(750 + Random(500));
+    until (Not FindDTM(BuryBone[i], x, y, MIX1, MIY1, MIX2, MIY2));
+ end;
+
+    Result := (not FindDTM(BuryBone[i], x, y, MIX1, MIY1, MIX2, MIY2));
+
+    if Result then
+    begin
+      Writeln('Moving on. Burying Done.')
+      exit;
+    end
+  end;
+  FreeDTM(BuryBone[i]);
+end;
+
+{******************************************************************************}
+
+function InvCheck : Boolean;
+begin
+    if InvEmpty then
+    begin
+      Result := True;
+      Writeln('Inv. Empty');
+    end else
+    begin
+      Result := False;
+      Writeln('Inv. Not Empty');
+    end;
+end;
+
+{******************************************************************************}
+
+procedure FindCoinsGround;
+var
+  CTS, x, y, h, i: Integer;
+  CTPoint : TPoint;
+  CTPA : TPointArray;
+  CATPA : T2DPointArray;
+begin
+
+  if not LoggedIn then LoginPlayer;
+  FindNormalRandoms;
+
+  wait(RandomRange(530, 680));
+
+  CTS := GetToleranceSpeed;
+  ColorToleranceSpeed(2);
+  SetToleranceSpeed2Modifiers(0.03, 2.73);
+
+    FindColorsSpiralTolerance(x, y, CTPA, 4503261, 10, 4, 513, 254, 5);
+
+
+  if Length(CTPA) < 1 then
+        Exit;
+
+      SetColorSpeed2Modifiers(0.2, 0.2);
+      ColorToleranceSpeed(CTS);
+
+      CATPA := TPAToATPAEx(CTPA, 10, 10);
+      SetLength(CTPA, 0);
+      SortATPAfromMidPoint(CATPA, Point(x, y));
+
+
+      h := High(CATPA);
+
+      for i := 0 to h do
+      begin
+        if Length(CATPA[I]) < 15 then
+         Continue;
+
+        CTPoint:= MiddleTPA(CATPA[I]);
+        MMouse(CTPoint.x, CTPoint.y, 0, 0);
+
+        If(WaitUpTextMulti(['ake'], 230)) then
+        begin
+          ClickMouse2(Mouse_Right);
+          Wait(RandomRange(400, 600));
+          ChooseOption('oins');
+
+          if DidRedClick then
+            Coin := Coin + 1;
+
+          Wait(RandomRange(1000, 3000));
+          exit
+        end else
+
+          Writeln('Didn''t find the Coins...');
+          FindNormalRandoms;
+      end;
+end;
+
+{******************************************************************************}
+
+procedure FindBones;
+var
+  CTS, x, y, h, i: Integer;
+  BTPoint : TPoint;
+  BTPA : TPointArray;
+  BATPA : T2DPointArray;
+begin
+
+  if not LoggedIn then
+    LoginPlayer;
+
+  FindNormalRandoms;
+
+
+  wait(RandomRange(530, 680));
+
+  CTS := GetToleranceSpeed;
+  ColorToleranceSpeed(2);
+  SetToleranceSpeed2Modifiers(0.07, 0.36);
+
+    FindColorsSpiralTolerance(x, y, BTPA, 11449275, 10, 4, 513, 254, 16);
+
+
+  if Length(BTPA) < 1 then
+        Exit;
+
+      SetColorSpeed2Modifiers(0.2, 0.2);
+      ColorToleranceSpeed(CTS);
+
+      BATPA := TPAToATPAEx(BTPA, 10, 10);
+      SetLength(BTPA, 0);
+      SortATPAfromMidPoint(BATPA, Point(x, y));
+
+
+      h := High(BATPA);
+
+      for i := 0 to h do
+      begin
+        if Length(BATPA[I]) < 15 then
+         Continue;
+
+        BTPoint:= MiddleTPA(BATPA[I]);
+        MMouse(BTPoint.x, BTPoint.y, 0, 0);
+
+        If(WaitUpTextMulti(['ake'], 230)) then
+        begin
+          ClickMouse2(Mouse_Right);
+          Wait(RandomRange(400, 600));
+          ChooseOption('ones');
+
+          if DidRedClick then
+            Bone := Bone + 1;
+
+          Wait(RandomRange(1000, 3000));
+          BuryBonesInv;
+          exit;
+        end else
+
+          Writeln('Didn''t find the Bones...');
+          FindNormalRandoms;
+      end;
+end;
+
+{******************************************************************************}
+
+procedure AntiBan;
+
+  begin
+    if(not(LoggedIn))then
+      Exit;
+
+    FindNormalRandoms;
+
+  if (UseAntibans = True) then
+  begin
+    case Random(15000) of
+
+    0..10:
+        begin
+          writeLn('Doing AntiBan #0 (Hover on Strength Level)');
+          HoverSkill('Strength', false);
+          wait(2453+Random(432));
+          GameTab(Tab_Inv);
+        end;
+
+    11..20:
+        begin
+          writeLn('Doing Antiban #1 (Picking Up Mouse)');
+          PickUpMouse;
+        end;
+
+    21..30:
+        begin
+          writeLn('Doing AntiBan #2 (Changing Directions)')
+          MakeCompass('N');
+          wait(100+random(133));
+          MakeCompass('S');
+          wait(50+random(133));
+          MakeCompass('N');
+          FindNormalRandoms;
+        end;
+
+    31..40:
+        begin
+          writeLn('Doing AntiBan #3 (Moving Mouse)');
+          MMouse(50,100,25,25);
+        end;
+
+    41..50:
+      begin
+        writeLn('Doing AntiBan #4 (Moving Mouse)');
+        MMouse(81,292,24,24);
+      end;
+
+    51..60:
+      begin
+        writeLn('Doing AntiBan #5 (Moving Mouse)');
+        MMouse(581,341,25,25);
+      end;
+
+    61..70:
+      begin
+        writeLn('Doing AntiBan #6 (Moving Mouse)');
+        MMouse(0,0,500,500);
+      end;
+
+    71..80:
+      Begin
+        writeLn('Doing AntiBan #7 (Random Right Click)');
+        RandomRClick;
+      End;
+
+    81..90:
+      Begin
+        writeLn('Doing AntiBan #8 (Hover Random Skill)');
+        HoverSkill('Random', False);
+        GameTab(Tab_Inv);
+        MakeCompass('N');
+      End;
+
+    91..100:
+      Begin
+        writeLn('Doing AntiBan #9 (Bored Human)');
+        BoredHuman;
+        MakeCompass('N');
+      End;
+
+    101..110:
+      Begin
+        writeLn('Doing AntiBan #10 (Sleep And Move Mouse)');
+        SleepAndMoveMouse(RandomRange(400,500));
+        MakeCompass('N');
+      End;
+
+    111..120:
+      Begin
+        writeLn('Doing AntiBan #11 (Random Right Click)');
+        Wait(RandomRange(250, 1500));
+        RandomRClick;
+      End;
+
+    121..130:
+      Begin
+        writeLn('Doing AntiBan #12 (Wait...)');
+        Wait(RandomRange(250, 4000));
+      End;
+
+    131..140:
+      begin
+        writeLn('Doing AntiBan #13 (Hover Fishing)');
+        HoverSkill(skill_cooking,false);
+      end;
+
+    141..150:
+      begin
+        writeLn('Doing AntiBan #14 (Checking Friends)');
+        GameTab(Tab_Friends);
+      end;
+
+    151..160:
+      begin
+        writeLn('Doing AntiBan #15 (Picking Up Mouse)');
+        PickUpMouse;
+      end;
+
+    161..170:
+      begin
+        writeLn('Doing AntiBan #16 (Random Compass)');
+        MakeCompass('rand');
+        MakeCompass('N');
+      end;
+
+    171..180:
+      begin
+        writeLn('Doing AntiBan #17 (Wait...)');
+        Wait(5000+random(2000));
+      end;
+
+    181..190:
+      begin
+        writeLn('Doing AntiBan #18 (Stats Tab)');
+        GameTab(Tab_Stats);
+        Wait(400 + Random(8000));
+        GameTab(Tab_Inv);
+      end;
+
+    191..300:
+      Begin
+        writeLn('Doing AntiBan #19-30 (Bored Human)');
+        BoredHuman;
+        MakeCompass('N');
+      End;
+
+    300..310:
+      Begin
+        InvCheck;
+      End;
+    end;
+  end;
+end;
+
+{******************************************************************************}
+
+procedure HomeTele;
+var
+  x, y : Integer;
+
+begin
+
+    GameTab(tab_Magic);
+    wait(990 + Random(789));
+
+    if FindColorTolerance(x, y, 4863772, 651, 213, 675, 235, 15) then
+    begin
+      Mmouse( x, y, 0, 0);
+      ClickMouse2(Mouse_Left);
+      writeln('Hat selected.');
+      wait(RandomRange(340, 568));
+    end;
+
+    if FindColorTolerance(x, y, 15655386, 651, 249, 675, 273, 15) then
+    begin
+      Mmouse( x, y, 0, 0);
+      ClickMouse2(Mouse_Left);
+      writeln('Teleport Tab selected.');
+      wait(RandomRange(340, 568));
+    end;
+
+    if FindColorTolerance(x, y, 15655386, 555, 284, 588, 322, 15) then
+    begin
+      Mmouse( x, y, 0, 0);
+      ClickMouse2(Mouse_Left);
+      writeln('Home Teleport selected.');
+      wait(RandomRange(840, 1568));
+    end;
+
+    if FindColorTolerance(x, y, 8943966, 307, 218, 339, 252, 15) then
+    begin
+      Mmouse( x, y, 0, 0);
+      ClickMouse2(Mouse_Left);
+      writeln('Lumbridge selected.');
+      wait(RandomRange(15000, 25000));
+    end;
+
+end;
+
+{******************************************************************************}
+
+procedure EatFood;
+begin
+
+  SendKeys(FoodNumber, 3, 10);
+  writeln('Eating some ' + NameFood);
+  wait(785 + Random(354));
+  if (GetChatBoxText(8, clBlack) = 'You donrt have any left!') then
+  begin
+    writeln('Uh oh. You have no more food. Teleporting home, then terminating script for saftey.');
+    HomeTele;
+    Logout;
+    TerminateScript;
+  end else
+  wait(RandomRange(253, 870));
+end;
+
+{******************************************************************************}
+
+procedure CheckHP;
+var
+  x, y, f : Integer;
+
+begin
+  if not LoggedIn then
+    exit;
+
+  if (UseFood = True) then
+  begin
+    if FindColorTolerance(x, y, 65535, 720, 23, 740, 39, 15) then
+    begin
+      writeln('Low HP. Eating..');
+      MarkTime(f);
+      repeat
+        EatFood;
+        if (TimeFromMark(f) >30000) then
+        begin
+          Writeln('did nto find color')
+          Break;
+        end;
+      until (FindColorTolerance(x, y, 65280, 720, 23, 740, 39, 15));
+      wait(RandomRange(340, 568));
+    end else
+
+    if FindColorTolerance(x, y, 65280, 720, 23, 740, 39, 15) then
+      exit;
+  end;
+end;
+
+{******************************************************************************}
+
+procedure AttackMonster;
+
+var
+  tmpCTS, x, y, h, i: Integer;
+  ATPoint : TPoint;
+  ATPA : TPointArray;
+  AATPA : T2DPointArray;
+  Color, Tolerance, LATPA : Array of Integer;
+  HueMod, SatMod : Array of Extended;
+  UpText : Array of String;
+
+begin
+  if not LoggedIn then
+    LoginPlayer;
+
+  FindNormalRandoms;
+
+  tmpCTS := GetToleranceSpeed;
+
+  case Lowercase(Monster2Kill) of
+
+  'goblin':
+    begin
+      Color     := [4289908];
+      Tolerance := [6];
+      HueMod    := [0.39];
+      SatMod    := [0.08];
+      UpText    := ['Attack', 'oblin'];
+      LATPA     := [15];
+    end;
+
+  'mossgiant':
+    begin
+      Color     := [5138023];
+      Tolerance := [7];
+      HueMod    := [0.96];
+      SatMod    := [0.12];
+      UpText    := ['Attack', 'oss'];
+      LATPA     := [15];
+    end;
+
+  'hillgiant':
+    begin
+      Color     := [6072789];
+      Tolerance := [16];
+      HueMod    := [0.10];
+      SatMod    := [1.92];
+      UpText    := ['Attack', 'ill'];
+      LATPA     := [10];
+    end;
+
+  'icegiant':
+    begin
+      Color     := [11577953];
+      Tolerance := [25];
+      HueMod    := [0.03];
+      SatMod    := [0.85];
+      UpText    := ['iant'];
+      LATPA     := [15];
+    end;
+
+  'lesserdemon':
+    begin
+      Color     := [2702755];
+      Tolerance := [26];
+      HueMod    := [0.08];
+      SatMod    := [0.73];
+      UpText    := ['esser', 'emon'];
+      LATPA     := [15];
+    end;
+
+  'guard':
+    begin
+      Color     := [3186364];
+      Tolerance := [9];
+      HueMod    := [0.09];
+      SatMod    := [0.72];
+      UpText    := ['Attack', 'uard'];
+      LATPA     := [10];
+    end;
+
+  'minotaur':
+    begin
+      Color     := [9936542];
+      Tolerance := [6];
+      HueMod    := [0.47];
+      SatMod    := [0.19];
+      UpText    := ['ttack', 'inotaur'];
+      LATPA     := [15];
+    end;
+
+  'giantspider':
+    begin
+      Color     := [1648189];
+      Tolerance := [7];
+      HueMod    := [0.73];
+      SatMod    := [1.89];
+      UpText    := ['ttack', 'iant'];
+      LATPA     := [15];
+    end;
+
+  'ankou':
+    begin
+      Color     := [6378364];
+      Tolerance := [12];
+      HueMod    := [0.15];
+      SatMod    := [0.76];
+      UpText    := ['ttack', 'nkou'];
+      LATPA     := [15];
+    end;
+
+  'warpedcockroach':
+    begin
+      Color     := [3689600];
+      Tolerance := [7];
+      HueMod    := [0.27];
+      SatMod    := [0.07];
+      UpText    := ['arped', 'ockroach'];
+      LATPA     := [15];
+    end;
+
+  'corpsespider':
+    begin
+      Color     := [5993855];
+      Tolerance := [9];
+      HueMod    := [0.19];
+      SatMod    := [0.46];
+      UpText    := ['pider', 'orpse'];
+      LATPA     := [15];
+    end;
+
+  'warpedfly':
+    begin
+      Color     := [13159126];
+      Tolerance := [9];
+      HueMod    := [0.36];
+      SatMod    := [0.95];
+      UpText    := ['arped', 'ly'];
+      LATPA     := [15];
+    end;
+
+  'crawlingcorpsetorso':
+    begin
+      Color     := [5681613];
+      Tolerance := [26];
+      HueMod    := [0.04];
+      SatMod    := [1.60];
+      UpText    := ['awling', 'orso'];
+      LATPA     := [15];
+    end;
+
+  'warpedrat':
+    begin
+      Color     := [4873831];
+      Tolerance := [7];
+      HueMod    := [0.37];
+      SatMod    := [1.58];
+      UpText    := ['arped', 'at'];
+      LATPA     := [15];
+    end;
+
+  'skeleton':
+    begin
+      Color     := [9490665];
+      Tolerance := [9];
+      HueMod    := [0.19];
+      SatMod    := [3.32];
+      UpText    := ['ttack', 'keleton'];
+      LATPA     := [15];
+    end;
+
+  'warpedbat':
+    begin
+      Color     := [5527133];
+      Tolerance := [15];
+      HueMod    := [0.25];
+      SatMod    := [0.21];
+      UpText    := ['arped', 'at'];
+      LATPA     := [15];
+    end;
+
+  'corpsearcher':
+    begin
+      Color     := [4939363];
+      Tolerance := [12];
+      HueMod    := [0.12];
+      SatMod    := [0.57];
+      UpText    := ['orpse', 'archer'];
+      LATPA     := [15];
+    end;
+
+  'skoblin':
+    begin
+      Color     := [6195352];
+      Tolerance := [10];
+      HueMod    := [0.17];
+      SatMod    := [0.39];
+      UpText    := ['ttack', 'koblin'];
+      LATPA     := [15];
+    end;
+
+  'corpsemage':
+    begin
+      Color     := [4999230];
+      Tolerance := [10];
+      HueMod    := [4.30];
+      SatMod    := [0.32];
+      UpText    := ['orpse', 'mage'];
+      LATPA     := [15];
+    end;
+
+  'dragithnurn':
+    begin
+      Color     := [2628958];
+      Tolerance := [8];
+      HueMod    := [0.02];
+      SatMod    := [0.18];
+      UpText    := ['ragith', 'urn'];
+      LATPA     := [15];
+    end;
+
+  'custom':
+    begin
+      Color     := [MColour];
+      Tolerance := [MTol];
+      HueMod    := [HMod];
+      SatMod    := [SMod];
+      UpText    := [UpText1, Uptext2];
+      LATPA     := [15];
+    end;
+
+  end;
+
+  SetColorToleranceSpeed(2);
+  SetColorSpeed2Modifiers(HueMod[i], SatMod[i]);
+
+    FindColorsSpiralTolerance(x, y, ATPA, Color[i], 10, 4, 513, 254, Tolerance[i]);
+
+      if Length(ATPA) < 1 then
+        Exit;
+
+      SetColorSpeed2Modifiers(0.2, 0.2);
+      ColorToleranceSpeed(tmpCTS);
+
+      AATPA := TPAToATPAEx(ATPA, 10, 10);
+      SetLength(ATPA, 0);
+      SortATPAfromMidPoint(AATPA, Point(x, y));
+
+
+      h := High(AATPA);
+
+      for i := 0 to h do
+      begin
+        if Length(AATPA[I]) < 5 then
+         Continue;
+
+        ATPoint:= MiddleTPA(AATPA[I]);
+        MMouse(ATPoint.x, ATPoint.y, 0, 0);
+
+        If(WaitUpTextMulti(UpText, 230)) then
+        begin
+          ClickMouse2(Mouse_Left);
+          if DidRedClick then
+            Kills := Kills + 1;
+          Wait(RandomRange(160, 580));
+          //UseAbilities;
+
+          exit
+        end else
+
+          Writeln('Didn''t find the Monster...');
+          FindNormalRandoms;
+      end;
+end;
+
+{******************************************************************************}
+
+procedure SelectXP;
+var
+  x, y : Integer;
+
+begin
+  if not LoggedIn then Exit;
+  FindNormalRandoms;
+
+  if (not GameTab(tab_Combat)) then
+  begin
+    GameTab(tab_Combat);
+    wait(990 + Random(789));
+  end;
+
+   if FindColorTolerance(x, y, 4766432, 693, 426, 724, 455, 24) then
+   begin
+    Mmouse( x, y, 0, 0);
+    ClickMouse2(Mouse_Left);
+    wait(990 + Random(789));
+   end;
+end;
+
+{******************************************************************************}
+
+procedure AttackPanel;
+var
+  x, y : Integer;
+
+begin
+
+  if FindBitmapToleranceIn(Sword, x, y, 570, 236, 609, 281, 24) then
+   begin
+    Mmouse( x, y, 0, 0);
+    ClickMouse2(Mouse_Left);
+    wait(RandomRange(340, 568));
+   end else
+
+   begin
+    Writeln('Did not find Sword. Terminating Script.');
+    TerminateScript;
+   end;
+end;
+
+{******************************************************************************}
+
+procedure MagePanel;
+var
+  x, y : Integer;
+
+begin
+
+  if FindBitmapToleranceIn(MageHat, x, y, 617, 234, 664, 283, 24) then
+   begin
+    Mmouse( x, y, 0, 0);
+    ClickMouse2(Mouse_Left);
+    wait(RandomRange(340, 568));
+   end else
+
+   begin
+    Writeln('Did not find Mage Hat. Terminating Script.');
+    TerminateScript;
+   end;
+end;
+
+{******************************************************************************}
+
+procedure RangedPanel;
+var
+  x, y  : Integer;
+
+begin
+
+  if FindBitmapToleranceIn(Bow, x, y, 673, 236, 717, 281, 24) then
+   begin
+    Mmouse( x, y, 0, 0);
+    ClickMouse2(Mouse_Left);
+    wait(RandomRange(340, 568));
+   end else
+
+   begin
+    Writeln('Did not find Bow. Terminating Script.');
+    TerminateScript;
+   end;
+end;
+
+{******************************************************************************}
+
+procedure ExitButton;
+var
+  x, y : Integer;
+
+begin
+  if FindColorTolerance(x, y, 2929149, 707, 202, 732, 236, 24) then
+   begin
+    Mmouse( x, y, 0, 0);
+    ClickMouse2(Mouse_Left);
+    wait(RandomRange(340, 568));
+   end else
+
+   begin
+    Writeln('Did not find Exit Button. Terminating Script.');
+    TerminateScript;
+   end;
+end;
+
+{******************************************************************************}
+
+procedure MLControlled;
+var
+  x, y : Integer;
+
+begin
+
+  AttackPanel;
+
+    if FindColorTolerance(x, y, 3111603, 568, 299, 704, 319, 15) then
+    begin
+      Mmouse( x, y, 0, 0);
+      ClickMouse2(Mouse_Left);
+      writeln('Controlled selected.');
+      wait(RandomRange(340, 568));
+    end else
+
+    if FindColorTolerance(x, y, 3328050, 568, 299, 704, 319, 15) then
+      writeln('Controlled already selected.');
+      exit;
+
+   begin
+      Writeln('Did not find Attack Type. Terminating Script.');
+      TerminateScript;
+   end;
+end;
+
+{******************************************************************************}
+
+procedure Attack;
+var
+  x, y : Integer;
+
+begin
+  AttackPanel;
+
+    if FindColorTolerance(x, y, 3111603, 598, 339, 667, 360, 15) then
+    begin
+      Mmouse( x, y, 0, 0);
+      ClickMouse2(Mouse_Left);
+      writeln('Attack selected.');
+      wait(RandomRange(340, 568));
+    end else
+
+    if FindColorTolerance(x, y, 3328050, 598, 339, 667, 360, 15) then
+      writeln('Attack already selected.');
+      exit;
+
+   begin
+      Writeln('Did not find Attack Type. Terminating Script.');
+      TerminateScript;
+   end;
+end;
+
+{******************************************************************************}
+
+procedure Strength;
+var
+  x, y : Integer;
+
+begin
+  AttackPanel;
+
+    if FindColorTolerance(x, y, 3111603, 598, 377, 680, 401, 15) then
+    begin
+      Mmouse( x, y, 0, 0);
+      ClickMouse2(Mouse_Left);
+      writeln('Strength selected.');
+      wait(RandomRange(340, 568));
+    end else
+
+    if FindColorTolerance(x, y, 3328050, 598, 377, 680, 401, 15) then
+      writeln('Strength already selected.');
+      exit;
+
+   begin
+      Writeln('Did not find Attack Type. Terminating Script.');
+      TerminateScript;
+   end;
+end;
+
+{******************************************************************************}
+
+procedure MLDefence;
+var
+  x, y : Integer;
+
+begin
+  AttackPanel;
+
+    if FindColorTolerance(x, y, 3111603, 598, 420, 667, 437, 15) then
+    begin
+      Mmouse( x, y, 0, 0);
+      ClickMouse2(Mouse_Left);
+      writeln('Defence selected.');
+      wait(RandomRange(340, 568));
+    end else
+
+    if FindColorTolerance(x, y, 3328050, 598, 420, 667, 437, 15) then
+      writeln('Defence already selected.');
+      exit;
+
+   begin
+    Writeln('Did not find Attack Type. Terminating Script.');
+    TerminateScript;
+   end;
+end;
+
+{******************************************************************************}
+
+procedure MGControlled;
+var
+  x, y : Integer;
+
+begin
+  MagePanel;
+
+    if FindColorTolerance(x, y, 3111603, 580, 313, 695, 336, 15) then
+    begin
+      Mmouse( x, y, 0, 0);
+      ClickMouse2(Mouse_Left);
+      writeln('Controlled selected.');
+      wait(RandomRange(340, 568));
+    end else
+
+    if FindColorTolerance(x, y, 3328050, 580, 313, 695, 336, 15) then
+      writeln('Controlled already selected.');
+      exit;
+
+   begin
+      Writeln('Did not find Attack Type. Terminating Script.');
+      TerminateScript;
+   end;
+end;
+
+{******************************************************************************}
+
+procedure Magic;
+var
+  x, y : Integer;
+
+begin
+  MagePanel;
+
+    if FindColorTolerance(x, y, 3111603, 580, 350, 695, 377, 15) then
+    begin
+      Mmouse( x, y, 0, 0);
+      ClickMouse2(Mouse_Left);
+      writeln('Magic selected.');
+      wait(RandomRange(340, 568));
+    end else
+
+    if FindColorTolerance(x, y, 3328050, 580, 350, 695, 377, 15) then
+      writeln('Magic already selected.');
+      exit;
+
+
+   begin
+    Writeln('Did not find Attack Type. Terminating Script.');
+    TerminateScript;
+   end;
+end;
+
+{******************************************************************************}
+
+procedure MGDefence;
+var
+  x, y : Integer;
+
+begin
+  MagePanel;
+
+    if FindColorTolerance(x, y, 3111603, 580, 393, 695, 415, 15) then
+    begin
+      Mmouse( x, y, 0, 0);
+      ClickMouse2(Mouse_Left);
+      writeln('Defence selected.');
+      wait(RandomRange(340, 568));
+    end else
+
+    if FindColorTolerance(x, y, 3328050, 580, 393, 695, 415, 15) then
+      writeln('Defence already selected.');
+      exit;
+
+   begin
+    Writeln('Did not find Attack Type. Terminating Script.');
+    TerminateScript;
+   end;
+end;
+
+{******************************************************************************}
+
+procedure RControlled;
+var
+  x, y : Integer;
+
+begin
+  RangedPanel;
+
+    if FindColorTolerance(x, y, 3111603, 580, 313, 695, 336, 15) then
+    begin
+      Mmouse( x, y, 0, 0);
+      ClickMouse2(Mouse_Left);
+      writeln('Controlled selected.');
+      wait(RandomRange(340, 568));
+    end else
+
+    if FindColorTolerance(x, y, 3328050, 580, 313, 695, 336, 15) then
+      writeln('Controlled already selected.');
+      exit;
+
+   begin
+    Writeln('Did not find Attack Type. Terminating Script.');
+    TerminateScript;
+   end;
+end;
+
+{******************************************************************************}
+
+procedure Ranged;
+var
+  x, y : Integer;
+
+begin
+  RangedPanel;
+
+    if FindColorTolerance(x, y, 3111603, 580, 350, 695, 377, 15) then
+    begin
+      Mmouse( x, y, 0, 0);
+      ClickMouse2(Mouse_Left);
+      writeln('Ranged selected.');
+      wait(RandomRange(340, 568));
+    end else
+
+    if FindColorTolerance(x, y, 3328050, 580, 350, 695, 377, 15) then
+      writeln('Ranged already selected.');
+      exit;
+
+   begin
+    Writeln('Did not find Attack Type. Terminating Script.');
+    TerminateScript;
+   end;
+end;
+
+{******************************************************************************}
+
+procedure RDefence;
+var
+  x, y : Integer;
+
+begin
+  RangedPanel;
+
+    if FindColorTolerance(x, y, 3111603, 580, 393, 695, 415, 15) then
+    begin
+      Mmouse( x, y, 0, 0);
+      ClickMouse2(Mouse_Left);
+      writeln('Defence selected.');
+      wait(RandomRange(340, 568));
+    end else
+
+    if FindColorTolerance(x, y, 3328050, 580, 393, 695, 415, 15) then
+      writeln('Defence already selected.');
+      exit;
+
+   begin
+    Writeln('Did not find Attack Type. Terminating Script.');
+    TerminateScript;
+   end;
+end;
+
+{******************************************************************************}
+
+procedure SelectSkill;
+begin
+
+  case Lowercase(Skill2Train) of
+    'mlcontrolled':
+      begin
+        WriteLn('The skill you selected to train is Attack, Strength and Defence.');
+        SelectXP;
+        mlcontrolled;
+        ExitButton;
+      end;
+
+    'attack':
+      begin
+        WriteLn('The skill you selected to train is Attack.');
+        SelectXP;
+        attack;
+        ExitButton;
+      end;
+
+    'strength':
+      begin
+        WriteLn('The skill you selected to train is Strength.');
+        SelectXP;
+        strength;
+        ExitButton;
+      end;
+
+    'mldefence':
+      begin
+        WriteLn('The skill you selected to train is strength.');
+        SelectXP;
+        mldefence;
+        ExitButton;
+      end;
+
+    'mgcontrolled':
+      begin
+        WriteLn('The skill you selected to train is Magic and Defence.');
+        SelectXP;
+        mgcontrolled;
+        ExitButton;
+      end;
+
+    'magic':
+      begin
+        WriteLn('The skill you selected to train is Magic.');
+        SelectXP;
+        magic;
+        ExitButton;
+      end;
+
+    'mgdefence':
+      begin
+        WriteLn('The skill you selected to train is Defence.');
+        SelectXP;
+        mgdefence;
+        ExitButton;
+      end;
+
+    'rcontrolled':
+      begin
+        WriteLn('The skill you selected to train is Ranged and Defence.');
+        SelectXP;
+        rcontrolled;
+        ExitButton;
+      end;
+
+    'ranged':
+      begin
+        WriteLn('The skill you selected to train is Ranged.');
+        SelectXP;
+        ranged;
+        ExitButton;
+      end;
+
+    'rdefence':
+      begin
+        WriteLn('The skill you selected to train is Defence.');
+        SelectXP;
+        rdefence;
+        ExitButton;
+      end;
+    end;
+end;
+
+{******************************************************************************}
+
+Procedure Proggy;
+  begin
+    TimeGone := (GetTimeRunning/1000);
+    KillXP := GetXPBar(XPBarNumber);
+    XPGain := (KillXP-BeginXP);
+    XPPerhour :=(3600*(XPGain))/((TimeGone));
+    KillsPerHour := (3600*(Kills))/((TimeGone));
+      begin
+        Writeln('******************************************************************************************');
+        Writeln('*/////////---------- StickToTheScript''s StickFighter - AIO Fighter Version 1.0 ----------\\\\\\\*');
+        Writeln('*/////////----------____________________________________________________________----------\\\\\\\*');
+        Writeln('******************************************************************************************');
+        Writeln('- Player: ' + Players[0].Nick + '');
+        Writeln('- Time Running: ' + IntToStr(TimeGone) + ' seconds.');
+        Writeln('- We have gained: ' + IntToStr(XPGain) + ' xp. Which is ' + IntToStr(XPPerHour) + ' xp per hour');
+        Writeln('- We have Picked up ' + IntToStr(Bone) + ' Bones. We Have picked up ' + IntToStr(Coin) + ' sets of coins.');
+        Writeln('');
+      end;
+  end;
+
+{******************************************************************************}
+
+procedure MainLoop;
+var
+  t : Integer;
+begin
+  If IsInFight then
+  Begin
+    MarkTime(t);
+    repeat
+      Antiban;
+      CheckHP;
+      UseAbilities;
+      //Proggy;
+    until (IsInFight = False) or (TimeFromMark(t) > 90000);
+  end;
+
+  if not IsInFight then
+    repeat
+      wait(990 + Random(789));
+
+      if (TakeCoins = True) then
+        FindCoinsGround;
+
+      if (BuryBones = True) then
+        FindBones;
+
+      AttackMonster;
+      CheckHP;
+    until (IsInFight = True);
+  proggy;
+end;
+
+{******************************************************************************}
+
+procedure Setup;
+begin
+  SetupSRL;
+  SRL_SIXHOURFIX := TRUE;
+  SMART_FIXSPEED := TRUE;
+
+  Writeln('');
+  Writeln('Your using StickFighter - AIO Fighter Version 1.0!');
+  Writeln('Please report any bugs on the thread.');
+  Writeln('Thanks!');
+  Writeln('');
+
+  if (IsSetup = false) then
+    TerminateScript;
+
+    DeclarePlayers;
+    LoginPlayer;
+
+    LoadBitmaps;
+
+    ClickNorth(SRL_ANGLE_HIGH);
+    MakeCompass('N');
+
+    ExitSquealofFortune;
+    ToggleMoneyPouch(False);
+    ToggleXPBar(True);
+    ToggleActionBar(True);
+    SelectSkill;
+    wait(440);
+    Retaliate(true);
+    BeginXP := GetXPBar(XPBarNumber);
+    ScriptRunTime := (RunTime/60);
+    TotalRunTime := (GetTimeRunning/1000);
+    MomentumAttack;
+
+    MarkTime(NormTime);
+    NormalWaitTime := RandomRange(2500,3500);
+end;
+
+{******************************************************************************}
+
+begin
+  ClearDebug;
+  Setup;
+  Addonterminate('FreeBitmaps');
+  repeat
+    if PrayerOnlyMode then
+      FindBones;
+
+    if not PrayerOnlyMode then
+      MainLoop;
+
+  until (TotalRunTime <= ScriptRunTime);
+  FreeBitmaps;
+end.
